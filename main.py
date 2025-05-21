@@ -25,6 +25,7 @@ USERNAME = os.environ.get("INSTA_USERNAME", config.username)
 PASSWORD = os.environ.get("INSTA_PASSWORD", config.password)
 SETTINGS_FILE = "instagrapi_session.json"
 PROXY = None
+REFRESH_INTERVAL = 5  
 
 # --- Logging Setup ---
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -221,6 +222,43 @@ def display_thread_messages(cl: Client, thread_id: str, limit: int = 20):
         logger.error(f"An unexpected error occurred while fetching messages: {e}")
     return False
 
+def print_new_messages(cl, messages, user_map, last_ts=None):
+    new_last = last_ts
+    for msg in messages:
+        ts = msg.timestamp if isinstance(msg.timestamp, datetime) else datetime.fromtimestamp(msg.timestamp / 1e6)
+        if last_ts and ts <= last_ts:
+            continue
+        sender = "You" if msg.user_id == cl.user_id else user_map.get(msg.user_id, f"User {msg.user_id}")
+        content = msg.text if msg.item_type == 'text' else f"[{msg.item_type}]"
+        print(f"{ts.strftime('%Y-%m-%d %H:%M:%S')} - {sender}: {content}")
+        new_last = ts if not new_last or ts > new_last else new_last
+    return new_last
+
+def continuous_chat(cl: Client, thread_id: str):
+    """
+    Continuously refresh messages and allow the user to reply in a chat-like flow.
+    """
+    print(f"\n--- Entering continuous chat with thread: {thread_id} ---")
+    last_ts = None
+    try:
+        thread = cl.direct_thread(thread_id)
+        user_map = {u.pk: u.username for u in thread.users}
+        while True:
+            thread = cl.direct_thread(thread_id)
+            messages = thread.messages[-20:]
+            last_ts = print_new_messages(cl, messages, user_map, last_ts)
+            user_input = input("\nType your reply (or 'exit' to leave chat): ")
+            if user_input.lower() == 'exit':
+                print("Exiting chat mode.")
+                break
+            if user_input.strip():
+                cl.direct_send(user_input, thread_ids=[thread_id])
+            time.sleep(REFRESH_INTERVAL)
+    except KeyboardInterrupt:
+        print("Chat interrupted.")
+    except Exception as e:
+        logger.error(f"Error in continuous chat mode: {e}")
+
 def send_text_message_interactive(cl: Client, user_ids: list[int] = None, thread_ids: list[str] = None):
     """Prompts user for text and sends a message."""
     if not (user_ids or thread_ids):
@@ -292,16 +330,14 @@ if __name__ == "__main__":
                         thread_index = int(thread_choice) - 1
                         if 0 <= thread_index < len(threads):
                             selected_thread_id = threads[thread_index].id
-                            if display_thread_messages(client, selected_thread_id):
-                                if input("Reply to this thread? (yes/no): ").lower() == 'yes':
-                                    send_text_message_interactive(client, thread_ids=[selected_thread_id])
+                            continuous_chat(client, selected_thread_id)
                         else:
                             logger.warning("Invalid thread number.")
                     except ValueError:
                         logger.warning("Invalid input. Please enter a number.")
                     except Exception as e:
                         logger.error(f"Error processing thread selection: {e}")
-            
+                        
             elif choice == '2':
                 search_username = input("Enter username to search: ").strip()
                 if not search_username:
